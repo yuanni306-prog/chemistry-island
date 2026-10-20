@@ -1,0 +1,41 @@
+{
+  "tool": "Built-in image_gen.imagegen",
+  "reference": "User-provided character style sheet",
+  "prompts": [
+    [
+      "storybook-parts",
+      "Original modular illustrated game character cutouts, TRUE TRANSPARENT PNG alpha zero between components. Style reference image1 only: warm polished storybook anime, large expressive shining brown eyes with dimensional irises, rosy cheeks, delicate freckles and nose, cinnamon ink, painterly warm skin shading. Exactly4cols3rows separated12objects with generous empty gaps. Row1: FOUR matching hairless heads including ears neck, frontal face, no hair, no accessories, natural 3.5-head-tall young adult proportions: head1 gentle smile eyes open, head2 eyes gently closed asleep, head3 eyes looking down reading, head4 gentle smiling slight 3quarter right turn. A separate wig will fully cover scalp. Row2: relaxed left hand and wrist, relaxed right hand and wrist, left hand resting on lap, right hand resting on lap, fingers naturally gently curved, four separate hands only. Row3: left brown leather laceup hiking boot withsock, right matching boot, left ivory canvas sneaker, right sneaker. No paper background or colored haze; components only on transparent alpha. No labels no text."
+    ],
+    [
+      "storybook-tops",
+      "TRUE TRANSPARENT PNG, twelve separate clothing CUTOUT sprites, alpha zero outside fabric, no gradient or color wash background. Exactly4columns3rows, wide empty gutters. Garments FRONT VIEW with SAME shoulder and waist anchors, no body no head no skin no mannequin. Warm elegant pastoral storybook-anime gouache illustration, dimensional tailored fabric, exquisite stitching and little botanical embroidery, softly gathered sleeves, brown pencil contour. Natural young adult proportions, not toy baby. Row1: ivory rolled sleeve collared cotton shirt with brassbuttons; dustyblue cardigan over cream PeterPan blouse; ochre hooded short cape over ivory shirt; cream/navy striped sailor shirt. Row2: sage embroidered gardening bib apron over cream puffsleeve blouse; rust linen puff-sleeve overshirt over cream underlayer; moss field jacket with brassbuttons and patch pockets; ivory lacecollar blouse with embroidered flowers. Row3: oatmeal cableknit sweater; pale blue sailor blouse with ribbon; olive knit vest over ivory rolled-sleeve shirt; camel doublebreasted belted trenchcoat. All12 isolated complete garments painted delicately, no background at all."
+    ],
+    [
+      "storybook-bottoms",
+      "TRUE TRANSPARENT PNG cutout atlas, 4cols3rows,12 isolated bottom garments only, alpha zero outside fabric and between trouserlegs, no colorwash or gradientbackground. Front view same waistanchors natural youngadult proportions, no skin no people no shoes no mannequin. Warm exquisite pastoral anime storybook gouache, cinnamon contour, fine linen weave, gathering pleats, embroidery, brass hardware, soft dimensional folds. Row1: sage tailored long trousers with brown belt; moss cuffed belted shorts; rust Aline skirt with cream embroidered underskirt; chocolate highwaist wideleg trousers. Row2: mustard cropped patched workpants green and rust stitched patches; dusty lilac pleated skirt; oatmeal linen trousers; olive highwaist cuffed shorts. Row3: sage maxi skirt with ivory apron and tiny embroidered botanical sprigs; indigo cuffedjeans; charcoal linen wideleg trousers; caramel corduroy skirt with patchpockets. Wide transparent gutters and each garment wholly within equal cell, no text."
+    ],
+    [
+      "storybook-wigs",
+      "TRUE TRANSPARENT PNG, twelve separate HAIRSTYLE WIG CUTOUTS, NO heads NO faces NO ears NO skin. Alpha zero outside hair and in broad FACE OPENINGS below fringe. 4columns3rows, even cells with wide transparent gutters, all wigs fit SAME round head front view. Original warm pastoral anime storybook gouache: fluffy voluminous rounded hair clumps and locks, cinnamon ink edges, auburn brown with natural highlights, stylish asymmetrical bangs, no photorealistic strands. Row1 tousled adventurer shortcut, airy rounded bob, long softly layered straight hair, twin low braids. Row2 high loose messy bun, round fluffy short curls, sideparted shortcrop, loose high wavy ponytail. Row3 long sidebraid, doublebuns with soft tendrils, shoulderlength wavy bob, long loose curls. Opaque crown completely covered with hair, no bald scalp; no accessories. Isolated hair ONLY, nothing behind or between wigs, no colored backdrop."
+    ]
+  ],
+  "completed_assets": [
+    {
+      "file": "storybook-parts.png",
+      "contains": "4 faces, 4 hands, 4 shoes; native SVG cutout contours"
+    },
+    {
+      "file": "storybook-wigs.png",
+      "contains": "12 hairstyles"
+    },
+    {
+      "file": "storybook-tops.png",
+      "contains": "12 tops; native SVG cutout contours"
+    },
+    {
+      "file": "storybook-bottoms.png",
+      "contains": "12 bottoms"
+    }
+  ],
+  "recovery_note": "All four production atlases are saved. Reuse these assets; do not regenerate them during recovery. Earlier hair draft is retained under design/cottage/storybook-hair-draft.png."
+}
