@@ -1,10 +1,6 @@
 // Five original narrated lessons; all media is served from this website.
 function chapterVideoURL(source,version){return source.startsWith('data:')||!version?source:`${source}?v=${version}`}
 function chapterVideoTime(seconds){const n=Math.floor(seconds);return `${Math.floor(n/60)}:${String(n%60).padStart(2,'0')}`}
-function chapterVideoShelf(){
- const list=Object.entries(CHAPTER_VIDEOS),topics=list.reduce((n,[,v])=>n+v.scenes.length,0);
- return `<section class="chapter-video-shelf"><div class="section-head"><h2>第一章配套视频</h2><small>${list.length} 节 · ${topics} 个知识点</small></div><div class="chapter-video-grid">${list.map(([id,v],i)=>`<button class="chapter-video-card" data-open-chapter-video="${id}"><span class="chapter-video-number">${i+1}</span><span><b>${escapeStudyText(v.title)}</b><small>${chapterVideoTime(v.duration)} · ${v.scenes.length} 个知识点</small></span><span class="chapter-video-play" aria-hidden="true">▶</span></button>`).join('')}</div></section>`;
-}
 function chapterLessonVideo(lesson){
  const v=CHAPTER_VIDEOS[lesson.id];if(!v)return '';
  const url=type=>chapterVideoURL(v[type],v.version);
@@ -19,7 +15,6 @@ function persistChapterVideo(video){
 }
 function pauseChapterVideos(){document.querySelectorAll('video[data-chapter-video]').forEach(video=>{if(!video.paused)video.pause();persistChapterVideo(video)})}
 document.addEventListener('click',e=>{
- const open=e.target.closest('[data-open-chapter-video]');if(open){pauseChapterVideos();showTextbookLesson(open.dataset.openChapterVideo);return}
  const jump=e.target.closest('[data-chapter-video-seek]');if(!jump)return;
  const video=document.querySelector(`video[data-chapter-video="${jump.dataset.chapterVideoId}"]`);if(!video)return;
  const seek=()=>{video.currentTime=Number(jump.dataset.chapterVideoSeek);video.play().catch(()=>{});video.scrollIntoView({block:'nearest',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})};
