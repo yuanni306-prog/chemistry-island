@@ -13,7 +13,7 @@ function expandPetCatalog(items){
 }
 function initPetLife(){
  state.foodLots=state.foodLots||{};state.petSupplies=state.petSupplies||{};
- for(const id of state.owned){const i=cottageItems.find(i=>i.id===id);if(i?.type==='pet'){const p=state.pets[id];p.receivedSupplies=p.receivedSupplies||[];p.action=p.action||'idle';p.actionUntil=p.actionUntil||0}}
+ for(const id of state.owned){const i=cottageItems.find(i=>i.id===id);if(i?.type==='pet'){const p=state.pets[id];p.receivedSupplies=p.receivedSupplies||[];p.action=p.action||'idle';p.actionUntil=p.actionUntil||0;p.stardust=p.stardust||0}}
  const ownedPets=cottageItems.filter(i=>i.type==='pet'&&state.owned.includes(i.id));if(!ownedPets.some(i=>i.id===petSupplyTarget))petSupplyTarget=ownedPets[0]?.id||'';
 }
 function petFoodUnits(species){return (state.foodLots[species]||[]).reduce((sum,lot)=>sum+lot.remaining,0)}
@@ -31,8 +31,8 @@ function petFedToday(id){const last=state.pets[id]?.lastFed;return last!=null&&n
 function newPetStatus(id){const p=state.pets[id],action=currentPetAction(id);return {sleep:'趴着睡觉',eat:'正在吃东西',play:'正在玩耍',bath:'正在洗澡',groom:'正在梳理毛发'}[action]||(!petFedToday(id)?'等你喂食':'吃饱了，四处看看')}
 function petCareActions(id){return `<div class="pet-actions">${[['feed','喂食'],['pet','摸摸'],['sleep','睡觉'],['play','玩耍'],['bath','洗澡']].map(([action,name])=>`<button class="btn light" data-pet-care="${action}" data-pet-id="${id}" ${action==='feed'&&petFedToday(id)?'disabled':''}>${action==='feed'&&petFedToday(id)?'今日已喂':name}</button>`).join('')}</div>`}
 function petFoodSummary(item){const units=petFoodUnits(item.species);return `${petSpecies[item.species][0]}：${units} 份 · 每天一次，每次 1 份`}
-function petLifePanel(){const pets=cottageItems.filter(i=>i.type==='pet'&&state.owned.includes(i.id));if(!pets.length)return '';return `<section class="pet-section"><div class="section-head"><h2>小动物 <small>${pets.length} 只</small></h2><button class="btn light" data-open-petshop>饲料与用品</button></div>${state.lastPetNotice?`<p class="pet-bond-notice" role="status">♥ ${state.lastPetNotice}</p>`:''}<div class="pet-list">${pets.map(i=>`<article class="pet-card"><div class="pet-portrait">${petLifeSprite(i.id,currentPetAction(i.id))}</div><div class="pet-card-copy"><h3>${i.name} <span>${petBondLevel(state.pets[i.id].bond||0)}</span></h3><p>${newPetStatus(i.id)} · 亲密度 ${state.pets[i.id].bond||0}</p><p class="food-summary">${petFoodSummary(i)}</p>${petCareActions(i.id)}</div></article>`).join('')}</div></section>`}
-function showPetLifeDialog(id){const item=cottageItems.find(i=>i.id===id);if(!item||!state.owned.includes(id))return;modal(`<div class="pet-dialog-art pet-action-${currentPetAction(id)}">${petLifeSprite(id,currentPetAction(id))}</div><h2>${item.name}</h2><p>${newPetStatus(id)} · 亲密度 ${state.pets[id].bond||0} · ${petBondLevel(state.pets[id].bond||0)}</p><p>${petFoodSummary(item)}</p>${petCareActions(id)}<p class="sub">喂食消耗专用饲料；每日首次互动增加亲密度。</p><button class="btn light" data-open-petshop>购买饲料与用品</button>`)}
+function petLifePanel(){const pets=cottageItems.filter(i=>i.type==='pet'&&state.owned.includes(i.id));if(!pets.length)return '';return `<section class="pet-section"><div class="section-head"><h2>小动物 <small>${pets.length} 只</small></h2><button class="btn light" data-open-petshop>饲料与用品</button></div>${state.lastPetNotice?`<p class="pet-bond-notice" role="status">♥ ${state.lastPetNotice}</p>`:''}<div class="pet-list">${pets.map(i=>`<article class="pet-card"><div class="pet-portrait" data-pet-form="${growthPetForm(state.pets[i.id].stardust)}">${petLifeSprite(i.id,currentPetAction(i.id))}</div><div class="pet-card-copy"><h3>${i.name} <span>${petBondLevel(state.pets[i.id].bond||0)}</span></h3><p>${newPetStatus(i.id)} · 亲密度 ${state.pets[i.id].bond||0}</p><p class="food-summary">${petFoodSummary(i)}</p>${petCareActions(i.id)}</div></article>`).join('')}</div></section>`}
+function showPetLifeDialog(id){const item=cottageItems.find(i=>i.id===id);if(!item||!state.owned.includes(id))return;modal(`<div class="pet-dialog-art pet-action-${currentPetAction(id)}" data-pet-form="${growthPetForm(state.pets[id].stardust)}">${petLifeSprite(id,currentPetAction(id))}</div><h2>${item.name}</h2><p>${newPetStatus(id)} · 亲密度 ${state.pets[id].bond||0} · ${petBondLevel(state.pets[id].bond||0)}</p><p>${petFoodSummary(item)}</p>${petCareActions(id)}${growthPetFeedHTML(id)}<p class="sub">喂食消耗专用饲料；每日首次互动增加亲密度。</p><button class="btn light" data-open-petshop>购买饲料与用品</button>`)}
 function carePetLife(id,action){
  const item=cottageItems.find(i=>i.id===id),p=state.pets[id];if(!p||!state.owned.includes(id)||!['feed','pet','sleep','play','bath'].includes(action))return;
  const today=new Date().toLocaleDateString('sv-SE'),already=key=>p[key]&&new Date(p[key]).toLocaleDateString('sv-SE')===today;let message='';
@@ -49,8 +49,8 @@ function carePetLife(id,action){
  save();render();if(document.querySelector('#modal').open)showPetLifeDialog(id);toast(message);
 }
 function petSupplySelector(){const pets=cottageItems.filter(i=>i.type==='pet'&&state.owned.includes(i.id));return `<div class="pet-shop-info"><label>用品给谁用 <select data-supply-target aria-label="选择用品的小动物"><option value="">先存入仓库</option>${pets.map(i=>`<option value="${i.id}" ${petSupplyTarget===i.id?'selected':''}>${i.name}</option>`).join('')}</select></label><p>专用饲料一包 24 份，可喂 24 次，每天一次、每次 1 份；新品首次赠予亲密度 +2。</p></div>`}
-function petLifeSprite(id,action='idle'){
- const painted=paintedPetSprite(id,action);if(painted)return painted;const item=cottageItems.find(i=>i.id===id);if(!item)return '';const species=item.species||id,c=item.petColor||'#c5aa83',R=artRect,P=artPath,E=artOval;let s='';const asleep=action==='sleep';
+function petLifeSprite(id,action='idle',view=''){
+ const painted=paintedPetSprite(id,action,view);if(painted)return painted;const item=cottageItems.find(i=>i.id===id);if(!item)return '';const species=item.species||id,c=item.petColor||'#c5aa83',R=artRect,P=artPath,E=artOval;let s='';const asleep=action==='sleep';
  if(species==='cat'||species==='dog'){
   s=E(36,40,23,13,c)+P('M21 45v11M38 46v10M49 44v12','none',c,6)+P(species==='cat'?'M14 37Q1 18 5 12':'M15 33Q1 27 8 22','none',c,5);
   if(asleep)s=E(35,46,27,12,c)+P('M14 44q8 15 24 7','none','#ffffff65',4);
@@ -81,4 +81,4 @@ function foodSprite(item){const pet=cottageItems.find(i=>i.type==='pet'&&i.speci
 document.addEventListener('change',e=>{if(e.target.dataset.supplyTarget!==undefined)petSupplyTarget=e.target.value});
 document.addEventListener('click',e=>{if(e.target.closest('[data-open-petshop]')){document.querySelector('#modal').close();cottageCategory='petcare';cottageGroup='feed';render();document.querySelector('.cottage-shop')?.scrollIntoView({block:'start'})}});
 
-let petDisplayedDay=new Date().toLocaleDateString('sv-SE');setInterval(()=>{const today=new Date().toLocaleDateString('sv-SE');if(today!==petDisplayedDay){petDisplayedDay=today;if(typeof route!=='undefined'&&route==='room')render()}},60000);
+let petDisplayedDay=new Date().toLocaleDateString('sv-SE');setInterval(()=>{const today=new Date().toLocaleDateString('sv-SE');if(today!==petDisplayedDay){petDisplayedDay=today;if(typeof route!=='undefined'&&['room','home'].includes(route))render()}},60000);

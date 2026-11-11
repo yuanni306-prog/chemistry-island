@@ -9,7 +9,9 @@ function initCottagePlayer(){
 }
 function playerSprite(override=null,pose='stand'){return designedPlayer(override,pose)}
 function playerPanel(){return `<section class="player-panel"><div class="player-portrait">${playerSprite()}</div><div class="player-details"><h2>我的人物</h2><p class="sub">基础款免费，肤色与发色自由选择。</p><div class="player-colors"><label>肤色 <input type="color" data-player-color="skin" value="${state.avatar.skin}" aria-label="选择肤色"></label><label>发色 <input type="color" data-player-color="hairColor" value="${state.avatar.hairColor}" aria-label="选择发色"></label><button class="btn light" data-open-wardrobe>挑选装扮</button></div></div></section>`}
-function cottagePlayerHTML(){const p=state.avatar.position||{x:6,y:6},rest=state.avatar.interaction,owner=rest&&state.equipped.includes(rest.furniture)?state.layout[rest.furniture]:null,item=owner?cottageItems.find(i=>i.id===rest.furniture):null,size=item?cottageSize(item,owner):null;const pose=owner?rest.pose:'stand',left=owner?(owner.x+size.w/2)/12*100:(p.x+.5)/12*100,top=owner?(owner.y+size.h-(pose==='lie'?.08:.18))/8*100:(p.y+1)/8*100;return `<button class="cottage-player player-${pose} ${owner?.rotated?'rest-rotated':''}" data-player data-player-pose="${pose}" aria-label="我的人物，${pose==='lie'?'躺在床上':pose==='sit'?'坐着':'方向键移动'}" style="left:${left}%;top:${top}%;z-index:${owner?12+owner.y+size.h:22+p.y}">${playerSprite(null,pose)}${pose==='lie'?'<span class="player-quilt" aria-hidden="true"></span>':''}</button>`}
+function cottagePlayerHTML(){const p=state.avatar.position||{x:6,y:6},rest=state.avatar.interaction,owner=rest&&state.equipped.includes(rest.furniture)?state.layout[rest.furniture]:null,item=owner?cottageItems.find(i=>i.id===rest.furniture):null,size=item?cottageSize(item,owner):null;const pose=owner?rest.pose:'stand',left=owner?(owner.x+size.w/2)/12*100:(p.x+.5)/12*100;
+ // Lying: the sprite's head centre sits 1.3 cells above the element's bottom edge, so the bottom edge goes 1.3 cells below the pillow line; rotated beds centre the body on the bed instead.
+ const top=(owner?pose==='lie'?(owner.rotated?owner.y+size.h/2+.64:owner.y+size.h*bedRest(item).pillow+1.3):owner.y+size.h-.18:p.y+1)/8*100;return `<button class="cottage-player player-${pose} ${owner?.rotated?'rest-rotated':''}" data-player data-player-pose="${pose}" data-player-motion="idle" aria-label="我的人物，${pose==='lie'?'躺在床上':pose==='sit'?'坐着':'方向键移动'}" style="left:${left}%;top:${top}%;z-index:${owner?12+owner.y+size.h:22+p.y}${pose==='lie'?`;--lie-scale:${bedRest(item).scale||.91}`:''}">${playerSprite(null,pose)}</button>`}
 let cottageWalk=null,cottageWalkTimer=null;
 function cottageWalkPath(start,target){
  const key=p=>`${p.x},${p.y}`,queue=[start],parents=new Map([[key(start),null]]);
@@ -20,7 +22,7 @@ function refreshCottagePlayer(){document.querySelectorAll('[data-player]').forEa
 function cancelCottageWalk(){clearTimeout(cottageWalkTimer);cottageWalkTimer=null;cottageWalk=null;document.querySelectorAll('[data-player]').forEach(el=>{el.classList.remove('walking');el.dataset.playerMotion='idle'})}
 function walkCottagePlayer(path,onArrival){
  cancelCottageWalk();delete state.avatar.interaction;document.querySelector('.player-rest-status')?.remove();refreshCottagePlayer();
- const finish=()=>{cottageWalk=null;cottageWalkTimer=null;if(onArrival)onArrival();else{save();refreshCottagePlayer();document.querySelector('[data-player]')?.focus({preventScroll:true})}};
+ const finish=()=>{cottageWalk=null;cottageWalkTimer=null;if(onArrival)onArrival();else{save();refreshCottagePlayer();cottagePetsApproach();document.querySelector('[data-player]')?.focus({preventScroll:true})}};
  if(path.length<2){finish();return}
  if(matchMedia('(prefers-reduced-motion: reduce)').matches){state.avatar.position={...path[path.length-1]};finish();return}
  const session={path,index:1,trace:[{...path[0]}]};cottageWalk=session;

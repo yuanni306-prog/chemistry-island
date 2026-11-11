@@ -8,11 +8,13 @@ function migrateTextbookProgress(){
   state.read=[];state.passed=[];state.mistakes=[];state.videos={};
   state.curriculumRevision=textbook.revision;
  }
- // Keep completions, videos, currency and reward keys. Old question indices must
- // not silently resolve to different questions after photo-based corrections.
+ // Keep completions, videos, currency and reward keys. Old question indices and review-plan
+ // keys must not silently resolve to different questions after photo-based corrections.
  const revision=textbook.contentRevision;
  if(revision&&state.textbookContentRevision!==revision){
-  const changed=new Set(lessons.filter(l=>l.contentRevision&&l.contentRevision!==state.textbookContentRevision).map(l=>l.id));
+  // Revision ids end in YYYYMMDD: a lesson changed only if its revision is newer than the one this save last saw.
+  const stamp=id=>id?id.slice(-8):'',seen=stamp(state.textbookContentRevision);
+  const changed=new Set(lessons.filter(l=>stamp(l.contentRevision)>seen).map(l=>l.id));
   const outdated=state.mistakes.filter(key=>changed.has(key.slice(0,key.lastIndexOf(':'))));
   if(outdated.length){
    state.curriculumArchive=state.curriculumArchive||{};
@@ -20,6 +22,8 @@ function migrateTextbookProgress(){
    if(!state.curriculumArchive[key])state.curriculumArchive[key]={mistakes:[...outdated],archivedAt:Date.now(),note:'教材照片核对前的题目索引；仅存档，不映射为新题。'};
    state.mistakes=state.mistakes.filter(key=>!outdated.includes(key));
   }
+  const schedule=state.growth?.review?.schedule||{};
+  for(const key of Object.keys(schedule))if(changed.has(key.slice(0,key.indexOf(':'))))delete schedule[key];
   state.textbookContentRevision=revision;
  }
 }
