@@ -23,7 +23,7 @@ function expandCottageCatalog(items){
  }
  for(const item of items){if(item.id==='space')item.group='theme';if(item.type==='pet')item.group='pets';if(item.type==='tool')item.group='tools'}
  const themes=[['cream','奶油小屋','#efe1bc','#ceac82'],['rose','莓果小屋','#e6c3ca','#bc8c80'],['sea','海盐小屋','#c2dde0','#a4bcb5'],['forest','森林小屋','#b6c6a4','#9da878'],['moon','月光小屋','#9396b8','#ada4c6']];
- for(const [id,name,wall,floor] of themes)items.push({id:`theme-${id}`,name,category:'decor',group:'theme',type:'theme',price:140,wall,floor,desc:({cream:'奶油拱窗 · 人字木地板',rose:'莓果花墙 · 格纹窗帘 · 陶砖',sea:'海景舷窗 · 百叶窗 · 漂木',forest:'树干拱梁 · 林间窗景',moon:'月景花窗 · 云纹石地板'})[id]});
+ for(const [id,name,wall,floor] of themes)items.push({id:`theme-${id}`,name,category:'decor',group:'theme',type:'theme',price:140,wall,floor,desc:PAINTED_ROOMS[`theme-${id}`].label});
  const clothes={
  top:[['基础衬衫',0,'#83a49a'],['奶油针织衫',45,'#dac49a'],['莓果连帽衫',55,'#bc7c89'],['海盐条纹衫',50,'#7ea7b4'],['森林背带上衣',65,'#718d69'],['研究员白大褂',80,'#ece7dc']],
  bottom:[['基础长裤',0,'#6f7e87'],['奶油短裤',35,'#c7ad81'],['莓果半裙',45,'#a86c7c'],['海盐阔腿裤',50,'#718ea3'],['森林工装裤',55,'#7c8965'],['月光百褶裙',60,'#9990b2']],

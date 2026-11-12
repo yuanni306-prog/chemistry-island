@@ -12,7 +12,7 @@ const cottageItems = expandCottageCatalog([
  {id:'lamp',name:'暖光落地灯',category:'decor',type:'room',price:55,w:1,h:1,desc:'为小屋添一盏暖灯'},
  {id:'petbed',name:'小动物软窝',category:'decor',type:'room',price:45,w:2,h:1,desc:'柔软的睡觉角落'},
  {id:'hat',name:'星星魔法帽',icon:'🧙🏻‍♀️',category:'decor',type:'avatar',price:100,desc:'角色帽子装扮'},
- {id:'space',name:'星空小屋',icon:'🌌',category:'decor',type:'theme',price:160,desc:'星空穹顶 · 黄铜星图 · 胡桃木地板'},
+ {id:'space',name:'星空小屋',icon:'🌌',category:'decor',type:'theme',price:160,desc:PAINTED_ROOMS.space.label},
  {id:'cat',name:'橘子猫',category:'pets',type:'pet',price:80,w:1,h:1,desc:'爱散步，也爱被摸摸'},
  {id:'dog',name:'奶油小狗',category:'pets',type:'pet',price:100,w:1,h:1,desc:'摇着尾巴陪你学习'},
  {id:'rabbit',name:'棉花兔',category:'pets',type:'pet',price:65,w:1,h:1,desc:'喜欢在木地板上蹦跳'},
