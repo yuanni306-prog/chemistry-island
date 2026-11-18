@@ -24,7 +24,7 @@ function cottagePreviewContent(item){
  if(item.type==='wear')return `<div class="preview-character" data-preview-wear="${mode==='original'?'original':item.id}">${playerSprite(mode==='original'?null:item)}</div>`;
  if(item.type==='pet'&&cottagePreview.action==='walk')return `<div class="preview-detail-art preview-animal preview-walk">${[['front','正面'],['side','侧面'],['back','背面']].map(([view,label])=>`<figure>${petLifeSprite(item.id,'idle',view)}<figcaption>${label}</figcaption></figure>`).join('')}</div>`;
  if(item.type==='pet')return `<div class="preview-detail-art preview-animal">${petLifeSprite(item.id,cottagePreview.action)}</div>`;
- if(item.type==='tool')return `<div class="preview-detail-art preview-tool">${cottageItemArt(item)}</div><p class="preview-note">解锁后，可在酸碱实验中查看模拟 pH 读数。</p>`;
+ if(item.type==='tool')return `<div class="preview-detail-art preview-tool">${cottageItemArt(item)}</div><p class="preview-note">解锁后，实验台会在溶液酸碱性确定的步骤显示酸性或碱性。</p>`;
  return `<div class="preview-detail-art"><div class="preview-zoom-art" style="--preview-zoom:${cottagePreview.zoom}">${cottageItemArt(item)}</div></div>`;
 }
 function drawCottagePreview(focusSelector){

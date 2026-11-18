@@ -27,6 +27,26 @@ function compatiblePetSupply(item,pet){return !item.speciesAllowed||item.species
 function assignPetSupply(id,petId=petSupplyTarget){const item=cottageItems.find(i=>i.id===id),pet=cottageItems.find(i=>i.id===petId);if(!item?.supplyKind||!pet||!state.owned.includes(id)||!state.owned.includes(petId))return '';if(!compatiblePetSupply(item,pet))return `${item.name}适合${item.speciesAllowed.map(s=>petSpecies[s][0].replace('粮','')).join('、')}，请换一个小动物。`;state.petSupplies[id]=petId;const p=state.pets[petId];p.receivedSupplies=p.receivedSupplies||[];if(!p.receivedSupplies.includes(id)){p.receivedSupplies.push(id);return increasePetBond(petId,2,`收到${item.name}`)}return `${item.name}已给${pet.name}使用`}
 function petHasSupply(id,kind){return cottageItems.some(i=>i.supplyKind===kind&&state.owned.includes(i.id)&&state.petSupplies[i.id]===id)}
 function currentPetAction(id){const p=state.pets[id];return p&&p.actionUntil>Date.now()?p.action:'idle'}
+const PET_ACTION_SUPPLY={eat:['bowl'],sleep:['bed','house'],play:['toy'],bath:['bath']};
+// How deep a pet sits in each painting, read off room screenshots: its feet rest `depth` of the way down the footprint (0 back edge, 1 front edge; .75 unless listed), and a bathing pet is cut off `sink` percent above its feet, at the water line.
+const PET_REST={'pet-house':{depth:.95},'pet-bath':{depth:.55,sink:26},'petbed-2':{depth:.9},'petbed-5':{depth:.9}};
+function petSupplySpot(id,supplyId){
+ const item=cottageItems.find(i=>i.id===supplyId),pos=state.layout[supplyId];
+ if(!item||state.petSupplies[supplyId]!==id||!state.owned.includes(supplyId)||!state.equipped.includes(supplyId)||!pos||pos.surface)return null;
+ const size=cottageSize(item,pos),inside=['bed','house','bath'].includes(item.supplyKind),around=cottageApproaches(supplyId),preferred=around.filter(c=>inside?c.y===pos.y+size.h:c.y>=pos.y&&c.y<pos.y+size.h),cells=preferred.length?preferred:around;
+ return cells.length?{item,pos,size,inside,cells}:null;
+}
+// The clock includes the walk to the nearest reachable supply, so the pet still gets the whole action once it arrives.
+function startPetAction(id,action,ms){
+ const p=state.pets[id],from=cottagePetPositions[id];let best=null;
+ for(const item of cottageItems.filter(i=>PET_ACTION_SUPPLY[action]?.includes(i.supplyKind))){
+  const spot=petSupplySpot(id,item.id);if(!spot)continue;
+  const steps=!from||spot.cells.some(c=>c.x===from.x&&c.y===from.y)?0:cottagePetPathTo(from,spot.cells).length||Infinity;
+  if(steps<(best?.steps??Infinity))best={steps,item};
+ }
+ p.action=action;p.spot=best?.item.id;p.actionUntil=Date.now()+ms+(best?.steps||0)*cottagePetStep;
+ return best?.item;
+}
 function petFedToday(id){const last=state.pets[id]?.lastFed;return last!=null&&new Date(last).toLocaleDateString('sv-SE')===new Date().toLocaleDateString('sv-SE')}
 function newPetStatus(id){const p=state.pets[id],action=currentPetAction(id);return {sleep:'趴着睡觉',eat:'正在吃东西',play:'正在玩耍',bath:'正在洗澡',groom:'正在梳理毛发'}[action]||(!petFedToday(id)?'等你喂食':'吃饱了，四处看看')}
 function petCareActions(id){return `<div class="pet-actions">${[['feed','喂食'],['pet','摸摸'],['sleep','睡觉'],['play','玩耍'],['bath','洗澡']].map(([action,name])=>`<button class="btn light" data-pet-care="${action}" data-pet-id="${id}" ${action==='feed'&&petFedToday(id)?'disabled':''}>${action==='feed'&&petFedToday(id)?'今日已喂':name}</button>`).join('')}</div>`}
@@ -39,12 +59,11 @@ function carePetLife(id,action){
  if(action==='feed'){
   if(petFedToday(id))return toast('今天已经喂过了，明天再来吧。');
   if(!usePetFood(item))return toast(`需要购买${petSpecies[item.species][0]}，目前饲料不足。`);
-  const bowl=cottageItems.find(i=>i.supplyKind==='bowl'&&state.petSupplies[i.id]===id&&state.layout[i.id]);if(bowl){const pos=state.layout[bowl.id];const next={x:Math.min(10,pos.x),y:Math.min(6,pos.y+1)};if(cottagePetCellFree(next.x,next.y))cottagePetPositions[id]=next}
-  const first=!already('lastFed');p.lastFed=Date.now();p.action='eat';p.actionUntil=Date.now()+14000;message=first?increasePetBond(id,1,'吃到喜欢的饲料'):`${item.name}正在吃东西，消耗 1 份饲料`;
- }else if(action==='sleep'){p.action='sleep';p.actionUntil=Date.now()+30000;message=`${item.name}趴下睡觉了`}
+  const first=!already('lastFed');p.lastFed=Date.now();startPetAction(id,'eat',14000);message=first?increasePetBond(id,1,'吃到喜欢的饲料'):`${item.name}正在吃东西，消耗 1 份饲料`;
+ }else if(action==='sleep'){const bed=startPetAction(id,'sleep',30000);message=bed?`${item.name}回到${bed.name}睡觉了`:`${item.name}趴下睡觉了`}
  else{
   const kind=action==='play'?'toy':action==='bath'?'bath':null;if(kind&&!petHasSupply(id,kind))return toast(`请先给${item.name}添置${kind==='toy'?'玩具':'浴盆'}。`);
-  const key=action==='pet'?'lastPetted':action==='play'?'lastPlayed':'lastBathed';const first=!already(key);p[key]=Date.now();p.action=action==='pet'?'groom':action;p.actionUntil=Date.now()+12000;message=first?increasePetBond(id,1,action==='pet'?'受到陪伴':action==='play'?'一起玩耍':'洗澡很开心'):`${item.name}很开心，今天的互动奖励已领取`;
+  const key=action==='pet'?'lastPetted':action==='play'?'lastPlayed':'lastBathed';const first=!already(key);p[key]=Date.now();startPetAction(id,action==='pet'?'groom':action,12000);message=first?increasePetBond(id,1,action==='pet'?'受到陪伴':action==='play'?'一起玩耍':'洗澡很开心'):`${item.name}很开心，今天的互动奖励已领取`;
  }
  save();render();if(document.querySelector('#modal').open)showPetLifeDialog(id);toast(message);
 }

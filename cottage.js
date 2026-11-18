@@ -17,7 +17,7 @@ const cottageItems = expandCottageCatalog([
  {id:'dog',name:'奶油小狗',category:'pets',type:'pet',price:100,w:1,h:1,desc:'摇着尾巴陪你学习'},
  {id:'rabbit',name:'棉花兔',category:'pets',type:'pet',price:65,w:1,h:1,desc:'喜欢在木地板上蹦跳'},
  {id:'chicken',name:'小黄鸡',category:'pets',type:'pet',price:50,w:1,h:1,desc:'小屋里的散步搭子'},
- {id:'meter',name:'数字 pH 计',icon:'🔬',category:'tools',type:'tool',price:120,desc:'解锁实验中的模拟 pH 读数'}
+ {id:'meter',name:'数字 pH 计',icon:'🔬',category:'tools',type:'tool',price:120,desc:'在教材实验里显示溶液的酸碱性'}
 ]);
 const cottageCategories=[['all','全部'],['furniture','家具'],['decor','装饰'],['pets','小动物'],['petcare','宠物用品'],['tools','实验器材'],['wardrobe','人物装扮'],['limited','当月限定'],['inventory','已购 / 回售']];
 let cottageCategory='furniture',cottageEdit=false,cottageSelected=null,cottageDrag=null,cottageTimer=null;
@@ -82,7 +82,7 @@ function cottageSprite(id){
 }
 function cottageBackground(){return paintedRoom()}
 function cottageObject(item,editable){const p=cottagePosition(item.id);if(!p)return '';const trying=cottageTryout?.id===item.id;const s=cottageSize(item,p),owner=p.surface?state.layout[p.surface]:null,table=owner?cottageItems.find(i=>i.id===p.surface):null,ts=table?cottageSize(table,owner):null;const left=owner?(owner.x+(p.slot+.5)/cottageSurfaceSlots(table,owner)*ts.w)/12*100:(p.x+s.w/2)/12*100,top=owner?(owner.y+ts.h-.58)/8*100:(p.y+s.h)/8*100;const interact=['bed','sofa','chair'].includes(item.base);return `<button class="cottage-object ${item.base==='rug'?'cottage-rug':''} ${owner?'on-table':''} ${cottageSelected===item.id&&editable?'selected':''} ${trying?'tryout':''} ${trying&&!validCottagePosition(item,p,item.id)?'invalid':''}" data-furniture="${item.id}" data-base="${item.base||item.id}" ${owner?`data-on-table="${p.surface}"`:''} aria-label="${item.name}${owner?'，摆在桌上':''}${trying?'，试摆中，购买后保存位置':''}${editable&&cottageEdit?'，可拖动或用方向键移动':interact?'，点击'+(item.base==='bed'?'躺下':'坐下'):''}" style="left:${left}%;top:${top}%;width:${(owner ? .65 : s.w)/12*100}%;height:${(owner ? .85 : s.h)/8*100}%;z-index:${owner?11+owner.y+ts.h:item.base==='rug'?1:10+p.y+s.h}">${trying?'<span class="tryout-badge">试摆</span>':''}<span class="object-art ${p.rotated?'rotated':''}">${cottageSprite(item.id)}</span>${item.id==='plant'?'<span class="plant sr">🪴</span>':''}</button>`}
-function cottageHTML(editable=false){return `<div class="cottage-scene ${editable?'full-room':''} ${cottageEdit&&editable?'editing':''}" data-cottage ${editable?'':'aria-label="我的小屋预览"'}>${cottageBackground()}${growthTreeHTML()}<div class="cottage-grid" aria-hidden="true"></div>${cottageItems.filter(i=>i.type==='room'&&(state.equipped.includes(i.id)||editable&&cottageTryout?.id===i.id)).map(i=>cottageObject(i,editable)).join('')}${cottagePlayerHTML()}${cottageBedCoverHTML()}${cottageItems.filter(i=>i.type==='pet'&&state.owned.includes(i.id)).map((i,n)=>{const action=currentPetAction(i.id),plan=cottagePetPlans[i.id],view=action==='idle'&&plan?.view||'';return `<button class="cottage-pet" data-pet="${i.id}" data-pet-action="${action}" data-pet-view="${view}" data-pet-motion="${view?'walk':'idle'}" data-pet-form="${growthPetForm(state.pets[i.id]?.stardust)}" aria-label="照顾${i.name}" style="left:${cottagePetPositions[i.id]?(cottagePetPositions[i.id].x+.5)/12*100:56+n*2}%;top:${cottagePetPositions[i.id]?(cottagePetPositions[i.id].y+1)/8*100:85}%;z-index:24;--pet-facing:${plan?.facing||1}">${petLifeSprite(i.id,action,view)}</button>`}).join('')}</div>`}
+function cottageHTML(editable=false){return `<div class="cottage-scene ${editable?'full-room':''} ${cottageEdit&&editable?'editing':''}" data-cottage ${editable?'':'aria-label="我的小屋预览"'}>${cottageBackground()}${growthTreeHTML()}<div class="cottage-grid" aria-hidden="true"></div>${cottageItems.filter(i=>i.type==='room'&&(state.equipped.includes(i.id)||editable&&cottageTryout?.id===i.id)).map(i=>cottageObject(i,editable)).join('')}${cottagePlayerHTML()}${cottageBedCoverHTML()}${cottageItems.filter(i=>i.type==='pet'&&state.owned.includes(i.id)).map((i,n)=>{const s=cottagePetShown(i.id),pos=cottagePetPositions[i.id],at=pos?cottagePetPlace(pos,s):{left:56+n*2,top:85,z:24};return `<button class="cottage-pet" data-pet="${i.id}" data-pet-action="${s.action}" data-pet-view="${s.view}" data-pet-motion="${s.view?'walk':'idle'}"${s.using?` data-pet-supply="${s.using.item.id}"`:''} data-pet-form="${growthPetForm(state.pets[i.id]?.stardust)}" aria-label="照顾${i.name}" style="left:${at.left}%;top:${at.top}%;z-index:${at.z};--pet-facing:${cottagePetPlans[i.id]?.facing||1}${at.sink?`;--pet-sink:${at.sink}%`:''}">${petLifeSprite(i.id,s.action,s.view)}</button>`}).join('')}</div>`}
 function petStatus(id){const p=state.pets[id];const hungry=!p?.lastFed||Date.now()-p.lastFed>24*60*60*1000;return hungry?'等你喂食':'吃饱了，在散步'}
 function cottagePage(){refreshMonthlyCatalog();const pets=cottageItems.filter(i=>i.type==='pet'&&state.owned.includes(i.id));const selected=cottageItems.find(i=>i.id===cottageSelected&&(state.equipped.includes(i.id)||cottageTryout?.id===i.id));return `<div class="cottage-heading"><div><h1>我的小屋</h1><p class="sub">布置房间，照顾小动物。</p></div><div class="cottage-heading-side"><button class="btn light" data-growth-museum="all">博物馆</button><span class="cottage-wallet">🪙 ${state.coins} 金币</span></div></div><section class="cottage-panel"><div class="cottage-toolbar"><span class="cottage-tag">${activeCottageTheme()?.name||'松木小屋'}</span><div><button class="btn ${cottageEdit?'':'light'}" data-room-edit aria-pressed="${cottageEdit}">${cottageEdit?'完成布置':'布置小屋'}</button></div></div>${cottageHTML(true)}<div class="cottage-controls"><p class="sub">${cottageEdit?'拖动家具；绿植、花盆和灯具可放到桌面。':'点击空地移动，点击床躺下，点击沙发或椅子坐下。'}</p>${cottageEdit?`<div class="placement-tools"><span>${selected?selected.name:'选择一件家具'}</span>${[['left','←','向左移动'],['up','↑','向上移动'],['down','↓','向下移动'],['right','→','向右移动'],['rotate','↻','旋转家具'],['store','收起','收起家具']].map(([action,label,aria])=>`<button data-room-action="${action}" aria-label="${aria}" ${selected?'':'disabled'}>${label}</button>`).join('')}</div>`:''}${cottageEdit?cottageTryoutControls()+cottageSurfaceControls(selected):cottageRestControls()}<span id="room-message" role="status"></span></div></section>${playerPanel()}${petLifePanel()}${cottageShopHTML()}`}
 function purchaseCottageItem(id){const item=cottageItems.find(i=>i.id===id);if(!item)return;
@@ -127,22 +127,30 @@ function cottagePetRoute(id,pos){
  return [];
 }
 function cottagePetsApproach(){for(const [id,plan] of Object.entries(cottagePetPlans)){const pos=cottagePetPositions[id];if(!pos||plan.path.length||currentPetAction(id)!=='idle'||(state.pets[id]?.bond||0)<5||Math.random()<.5)continue;plan.path=cottagePetPathTo(pos,cottagePetPlayerSide());plan.restUntil=0}}
-function placeCottagePet(el,pos,facing){el.style.left=(pos.x+.5)/12*100+'%';el.style.top=(pos.y+1)/8*100+'%';el.style.zIndex=20+pos.y;el.style.setProperty('--pet-facing',facing)}
+// A pet heading for its supply keeps showing the walk until it stands still on one of the supply's cells. In a bed, house or tub it takes that supply's z-index: pets follow furniture in the DOM, so it lies on top while anything in front still covers it.
+function cottagePetShown(id){const action=currentPetAction(id),pos=cottagePetPositions[id],plan=cottagePetPlans[id],spot=action!=='idle'&&pos&&state.pets[id].spot?petSupplySpot(id,state.pets[id].spot):null,using=!plan?.view&&spot?.cells.some(c=>c.x===pos.x&&c.y===pos.y)?spot:null,shown=spot&&!using?'idle':action,side=using&&!using.inside?(pos.x<using.pos.x?1:pos.x>=using.pos.x+using.size.w?-1:0):0;return {action:shown,view:shown==='idle'&&plan?.view||'',spot,using,side}}
+function cottagePetPlace(pos,{using,side}){if(!using?.inside)return {left:(pos.x+.5+side*.25)/12*100,top:(pos.y+1)/8*100,z:20+pos.y};const p=using.pos,s=using.size,rest=PET_REST[using.item.id];return {left:(p.x+s.w/2)/12*100,top:(p.y+s.h*(rest?.depth??.75))/8*100,z:10+p.y+s.h,sink:rest?.sink}}
+function placeCottagePet(el,place,facing){el.style.left=place.left+'%';el.style.top=place.top+'%';el.style.zIndex=place.z;el.style.setProperty('--pet-facing',facing);if(place.sink)el.style.setProperty('--pet-sink',place.sink+'%');else el.style.removeProperty('--pet-sink')}
+const cottagePetStep=600;
 function startCottagePets(){clearInterval(cottageTimer);const scene=document.querySelector('[data-cottage]');if(!scene)return;const step=()=>{if(cottageEdit&&route==='room')return;const now=Date.now();scene.querySelectorAll('[data-pet]').forEach(el=>{
- const id=el.dataset.pet,p=state.pets[id];if(p.actionUntil<=now){p.action='idle';if(Math.random()<.02){p.action='sleep';p.actionUntil=now+18000}}
- const action=currentPetAction(id),plan=cottagePetPlans[id]||(cottagePetPlans[id]={path:[],restUntil:0,facing:1,view:''});let pos=cottagePetPositions[id];
- if(!pos||!cottagePetCellFree(pos.x,pos.y)){const cells=cottagePetFreeCells();pos=cells[Math.floor(Math.random()*cells.length)]||{x:5,y:6};cottagePetPositions[id]=pos;plan.path=[];placeCottagePet(el,pos,plan.facing)}
+ const id=el.dataset.pet,p=state.pets[id];if(p.actionUntil<=now){p.action='idle';delete p.spot;if(Math.random()<.02)startPetAction(id,'sleep',18000)}
+ const plan=cottagePetPlans[id]||(cottagePetPlans[id]={path:[],restUntil:0,facing:1,view:''});let pos=cottagePetPositions[id];
+ if(!pos||!cottagePetCellFree(pos.x,pos.y)){const cells=cottagePetFreeCells();pos=cells[Math.floor(Math.random()*cells.length)]||{x:5,y:6};cottagePetPositions[id]=pos;plan.path=[]}
  plan.view='';
- if(action!=='idle')plan.path=[];
- else{
-  if(!plan.path.length&&now>=plan.restUntil){plan.path=cottagePetRoute(id,pos);if(!plan.path.length)plan.restUntil=now+1500+Math.random()*2500}
-  const next=plan.path.shift();
-  if(next&&!cottagePetCellFree(next.x,next.y))plan.path=[];
-  else if(next){plan.view=next.y<pos.y?'back':next.y>pos.y?'front':'side';plan.facing=next.x<pos.x?-1:next.x>pos.x?1:plan.facing;cottagePetPositions[id]=next;placeCottagePet(el,next,plan.facing);if(!plan.path.length)plan.restUntil=now+2000+Math.random()*6000}
- }
+ const {spot,using}=cottagePetShown(id);
+ if(currentPetAction(id)==='idle'){if(!plan.path.length&&now>=plan.restUntil){plan.path=cottagePetRoute(id,pos);if(!plan.path.length)plan.restUntil=now+1500+Math.random()*2500}}
+ else if(spot&&!using){const end=plan.path.at(-1);if(!spot.cells.some(c=>c.x===end?.x&&c.y===end?.y))plan.path=cottagePetPathTo(pos,spot.cells);if(!plan.path.length)delete p.spot}
+ else plan.path=[];
+ const next=plan.path.shift();
+ if(next&&!cottagePetCellFree(next.x,next.y))plan.path=[];
+ else if(next){plan.view=next.y<pos.y?'back':next.y>pos.y?'front':'side';plan.facing=next.x<pos.x?-1:next.x>pos.x?1:plan.facing;cottagePetPositions[id]=pos=next;if(!plan.path.length)plan.restUntil=now+2000+Math.random()*6000}
+ const shown=cottagePetShown(id);
+ if(shown.side)plan.facing=shown.side;
+ placeCottagePet(el,cottagePetPlace(pos,shown),plan.facing);
  el.dataset.petMotion=plan.view?'walk':'idle';
- if(el.dataset.petAction!==action||el.dataset.petView!==plan.view){el.dataset.petAction=action;el.dataset.petView=plan.view;el.innerHTML=petLifeSprite(id,action,plan.view)}
-})};step();cottageTimer=setInterval(step,600)}
+ if(shown.using)el.dataset.petSupply=shown.using.item.id;else delete el.dataset.petSupply;
+ if(el.dataset.petAction!==shown.action||el.dataset.petView!==plan.view){el.dataset.petAction=shown.action;el.dataset.petView=plan.view;el.innerHTML=petLifeSprite(id,shown.action,plan.view)}
+})};step();cottageTimer=setInterval(step,cottagePetStep)}
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  if(d.category){cottageCategory=d.category;cottageGroup=({furniture:'bed',decor:'rug',wardrobe:'top',petcare:'feed'})[d.category]||'all';render();document.querySelector(`[data-category="${d.category}"]`)?.focus()}
  if(d.roomEdit!==undefined){cancelCottageWalk();if(cottageTryout){cottageTryout=null;toast('试摆未购买，已取消。')}cottageEdit=!cottageEdit;cottageSelected=null;render()}
