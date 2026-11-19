@@ -71,9 +71,9 @@ function avatarAccessory(item){const P=artPath,E=artOval,R=artRect,c=item.color|
 // Raster clothes and hair share this single rig in the room, wardrobe and portrait.
 // window: optional [x0,y0,x1,y1] fractions of the part box; only that rectangle of the painting is drawn, inside the outline. {only:[…]} uses the rectangle alone, trusting the painting's own alpha edge.
 function paintedAvatarPart(key,x,y,w,h,extra='',window=null){
- const record=COTTAGE_ART.items[key];if(!record)return '';const sheet=COTTAGE_ART.sheets[record.sheet],clip=`avatar-part-${++avatarHairPaintId}`,[bx,by,bw,bh]=record.box;
+ const record=COTTAGE_ART.items[key];if(!record)return '';const clip=`avatar-part-${++avatarHairPaintId}`,[bx,by,bw,bh]=record.box;
  const holeId=`avatar-hole-${++avatarHairPaintId}`,windowId=`avatar-window-${++avatarHairPaintId}`;
- const rect=window?.only||window,image=`<image href="${sheet.url}" width="${sheet.width}" height="${sheet.height}" ${window?.only?'':`clip-path="url(#${clip})"`} ${record.hole?`mask="url(#${holeId})"`:''}/>`;
+ const rect=window?.only||window,image=`<image ${paintedArtAttrs(record)} ${window?.only?'':`clip-path="url(#${clip})"`} ${record.hole?`mask="url(#${holeId})"`:''}/>`;
  return `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${record.box.join(' ')}" preserveAspectRatio="none" overflow="hidden" ${extra}><defs><clipPath id="${clip}">${(record.paths||[record.outline]).map(points=>`<polygon points="${points.map(p=>p.join(',')).join(' ')}"/>`).join('')}</clipPath>${record.hole?`<mask id="${holeId}" maskUnits="userSpaceOnUse" x="${bx}" y="${by}" width="${bw}" height="${bh}"><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="white"/><path d="${record.hole}" fill="black"/></mask>`:''}${rect?`<clipPath id="${windowId}"><rect x="${bx+bw*rect[0]}" y="${by+bh*rect[1]}" width="${bw*(rect[2]-rect[0])}" height="${bh*(rect[3]-rect[1])}"/></clipPath>`:''}</defs>${rect?`<g clip-path="url(#${windowId})">${image}</g>`:image}</svg>`;
 }
 function legacyDesignedPlayer(override=null,pose='stand'){

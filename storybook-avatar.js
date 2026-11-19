@@ -12,8 +12,8 @@ function storyNeck(key,attrs){return `<g transform="translate(${(48-FACE_NECK.x)
 function storyBlink(openKey,attrs,maskId){const [deg,cx,cy]=FACE_TILT['face-sleep'],[,ox,oy]=FACE_TILT[openKey];return `<g class="avatar-blink" transform="translate(${(ox+faceShift(openKey)-cx).toFixed(2)} ${(oy-cy).toFixed(2)}) rotate(${deg} ${cx} ${cy})"><g mask="url(#${maskId})">${storyPart('face-sleep',...FACE_BOX,attrs)}</g></g>`}
 function storyBlinkMask(id){const [deg,cx,cy]=FACE_TILT['face-sleep'];return `<radialGradient id="${id}-fade"><stop offset=".7" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="96" height="216"><ellipse cx="${cx}" cy="${cy}" rx="24" ry="12" fill="url(#${id}-fade)" transform="rotate(${-deg} ${cx} ${cy})"/></mask>`}
 function storyBottomSlice(item,x,y,w,h,src){
- const r=COTTAGE_ART.items['story-bottom-'+item.variant];if(!r)return '';const clip=`story-leg-${++avatarHairPaintId}`,sheet=COTTAGE_ART.sheets[r.sheet],[bx,by,bw,bh]=r.box;
- return `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${bx+src.x*bw} ${by+src.y*bh} ${bw*src.w} ${bh*src.h}" preserveAspectRatio="none" overflow="hidden"><defs><clipPath id="${clip}"><polygon points="${r.outline.map(p=>p.join(',')).join(' ')}"/></clipPath></defs><image href="${sheet.url}" width="${sheet.width}" height="${sheet.height}" clip-path="url(#${clip})"/></svg>`;
+ const r=COTTAGE_ART.items['story-bottom-'+item.variant];if(!r)return '';const clip=`story-leg-${++avatarHairPaintId}`,[bx,by,bw,bh]=r.box;
+ return `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${bx+src.x*bw} ${by+src.y*bh} ${bw*src.w} ${bh*src.h}" preserveAspectRatio="none" overflow="hidden"><defs><clipPath id="${clip}"><polygon points="${r.outline.map(p=>p.join(',')).join(' ')}"/></clipPath></defs><image ${paintedArtAttrs(r)} clip-path="url(#${clip})"/></svg>`;
 }
 function designedPlayer(override=null,pose='stand'){
  if(!COTTAGE_ART.items['story-face-open'])return legacyDesignedPlayer(override,pose);

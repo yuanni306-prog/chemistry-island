@@ -1,16 +1,18 @@
 let paintedSpriteId=0;
-const PAINTED_ROOM_URL='assets/cottage/room.png';
+const PAINTED_ROOM_URL='assets/cottage/room.webp';
+// A record's painting is its own file, placed at its box in sheet coordinates: every viewBox, clip, mask and leg strip is written in those coordinates.
+const paintedArtAttrs=record=>`href="${record.url}" x="${record.box[0]}" y="${record.box[1]}" width="${record.box[2]}" height="${record.box[3]}"`;
 // coverFrom (0..1) keeps only the part of the sprite below that fraction of its height: the blanket of a bed drawn in front of a lying player.
 function paintedSprite(item,coverFrom=0){
  if(item.id==='rug')return starterRugArt();
  const record=typeof COTTAGE_ART!=='undefined'?COTTAGE_ART.items[item.id]||COTTAGE_ART.items[`${item.base||item.id}-${item.variant||0}`]:null;
  if(!record)return null;
- const sheet=COTTAGE_ART.sheets[record.sheet],box=record.box;
+ const box=record.box;
  const clip=`painted-clip-${++paintedSpriteId}`;
  // Rugs are the largest sprites and the smallest source art; a mild sharpen keeps the weave readable when upscaled.
  const sharpen=item.base==='rug'?`<filter id="${clip}-sharp"><feConvolveMatrix order="3" kernelMatrix="0 -0.35 0 -0.35 2.4 -0.35 0 -0.35 0" preserveAlpha="true"/></filter>`:'';
  const cover=coverFrom?`<clipPath id="${clip}-cover"><rect x="${box[0]}" y="${box[1]+box[3]*coverFrom}" width="${box[2]}" height="${box[3]*(1-coverFrom)}"/></clipPath>`:'';
- const image=`<image ${coverFrom?`clip-path="url(#${clip}-cover)"`:`clip-path="url(#${clip})"`} ${sharpen?`filter="url(#${clip}-sharp)"`:''} href="${sheet.url}" x="0" y="0" width="${sheet.width}" height="${sheet.height}"/>`;
+ const image=`<image ${coverFrom?`clip-path="url(#${clip}-cover)"`:`clip-path="url(#${clip})"`} ${sharpen?`filter="url(#${clip}-sharp)"`:''} ${paintedArtAttrs(record)}/>`;
  return `<svg class="painted-art" data-painted-item="${item.id}" viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><defs><clipPath id="${clip}"><polygon points="${record.outline.map(p=>p.join(',')).join(' ')}"/></clipPath>${cover}${sharpen}</defs>${coverFrom?`<g clip-path="url(#${clip})">${image}</g>`:image}</svg>`;
 }
 // The starter rug is the one sprite drawn as vector art: it is displayed at more than twice the width of a painted rug's source, so it is drawn in the atlas idiom (cinnamon contour, wobbled edges, paper grain, gouache wash) with the furniture's slight top-down view, a trapezoid whose top edge is 93% of the bottom. Stripe widths and fringe come from a fixed seed so every render is identical.
@@ -41,15 +43,15 @@ function paintedThemePreview(item){return `<div class="painted-theme-preview" ti
 const PET_WALK_AREA={front:1,side:1.2,back:.95};
 function paintedPetSprite(id,action='idle',view=''){
  const walking=action==='idle'&&view,key=walking?`animal-walk-${view}-${id}`:`animal-${action==='sleep'?'sleep':'awake'}-${id}`,record=typeof COTTAGE_ART!=='undefined'?COTTAGE_ART.items[key]:null;if(!record)return null;
- const sheet=COTTAGE_ART.sheets[record.sheet],clip=`pet-art-${++paintedSpriteId}`,box=record.box;
+ const clip=`pet-art-${++paintedSpriteId}`,box=record.box;
  // Walking: the legs are strips of the same painting below the belly line, each in its own group so it can shear from that line while staying joined to the body; the body is everything else.
  if(walking){const sit=COTTAGE_ART.items[`animal-awake-${id}`],scale=Math.min(70/sit.box[2],57/sit.box[3])*Math.sqrt(PET_WALK_AREA[view]*sit.area/record.area),[bx,by,bw,bh]=box,w=bw*scale,h=bh*scale,{top,strips}=record.legs,floor=by+bh+20,art=`<use href="#${clip}-art"/>`;
-  return `<svg viewBox="0 0 80 68" class="pet-painted pet-action-idle" data-pet-art="${key}" data-pet-view="${view}" aria-hidden="true"><g class="pet-painted-body"><svg x="${(40-w/2).toFixed(2)}" y="${(62-h).toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" viewBox="${box.join(' ')}" overflow="visible"><defs><clipPath id="${clip}"><polygon points="${record.outline.map(p=>p.join(',')).join(' ')}"/></clipPath><image id="${clip}-art" href="${sheet.url}" width="${sheet.width}" height="${sheet.height}" clip-path="url(#${clip})"/><clipPath id="${clip}-body"><path clip-rule="evenodd" d="M${bx-20} ${by-20}h${bw+40}V${floor}h${-bw-40}Z${strips.map(([x0,x1])=>`M${x0} ${top+2}H${x1}V${floor}H${x0}Z`).join('')}"/></clipPath>${strips.map(([x0,x1],n)=>`<clipPath id="${clip}-leg${n}"><rect x="${x0}" y="${top}" width="${x1-x0}" height="${floor-top}"/></clipPath>`).join('')}</defs>${strips.map((_,n)=>`<g class="pet-leg" clip-path="url(#${clip}-leg${n})" style="transform-origin:0 ${top}px">${art}</g>`).join('')}<g clip-path="url(#${clip}-body)">${art}</g></svg></g></svg>`}
+  return `<svg viewBox="0 0 80 68" class="pet-painted pet-action-idle" data-pet-art="${key}" data-pet-view="${view}" aria-hidden="true"><g class="pet-painted-body"><svg x="${(40-w/2).toFixed(2)}" y="${(62-h).toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" viewBox="${box.join(' ')}" overflow="visible"><defs><clipPath id="${clip}"><polygon points="${record.outline.map(p=>p.join(',')).join(' ')}"/></clipPath><image id="${clip}-art" ${paintedArtAttrs(record)} clip-path="url(#${clip})"/><clipPath id="${clip}-body"><path clip-rule="evenodd" d="M${bx-20} ${by-20}h${bw+40}V${floor}h${-bw-40}Z${strips.map(([x0,x1])=>`M${x0} ${top+2}H${x1}V${floor}H${x0}Z`).join('')}"/></clipPath>${strips.map(([x0,x1],n)=>`<clipPath id="${clip}-leg${n}"><rect x="${x0}" y="${top}" width="${x1-x0}" height="${floor-top}"/></clipPath>`).join('')}</defs>${strips.map((_,n)=>`<g class="pet-leg" clip-path="url(#${clip}-leg${n})" style="transform-origin:0 ${top}px">${art}</g>`).join('')}<g clip-path="url(#${clip}-body)">${art}</g></svg></g></svg>`}
  // The bowl, ball and tub are stand-ins: the room hides `.pet-prop` while the pet uses its own supply.
  let extras='';if(action==='eat')extras='<g class="pet-prop"><ellipse cx="53" cy="60" rx="17" ry="5" fill="#bdcabe" stroke="#8d9e8a"/><ellipse cx="53" cy="57" rx="15" ry="4" fill="#826a4d"/><path d="M44 57l3-1m6 2 3-1m4 0 2-1" stroke="#d9b782" stroke-width="2"/></g>';
  if(action==='play')extras='<g class="pet-prop"><circle cx="65" cy="57" r="8" fill="#c99c8e" stroke="#936e5c"/><path d="M60 51l10 11" stroke="#ecd5b1" stroke-width="2"/></g>';
  if(action==='bath')extras='<path class="pet-prop" d="M8 50h64l-5 14H13Z" fill="#afc5bd" stroke="#829f94"/>'+[14,25,38,51,64].map((x,n)=>`<circle cx="${x}" cy="${48+n%2*5}" r="7" fill="#f1f5e6" stroke="#c3d7c9"/>`).join('');
  if(action==='sleep')extras='<path d="M62 10h5l-5 6h5m3-15h7l-7 9h7" fill="none" stroke="#a69b8a" stroke-width="1.4" stroke-linecap="round"/>';
  const h=action==='sleep'?44:57;
- return `<svg viewBox="0 0 80 68" class="pet-painted pet-action-${action}" data-pet-art="${key}" aria-hidden="true"><g class="pet-painted-body"><svg x="5" y="${62-h}" width="70" height="${h}" viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMax meet" overflow="hidden"><defs><clipPath id="${clip}"><polygon points="${record.outline.map(p=>p.join(',')).join(' ')}"/></clipPath></defs><image href="${sheet.url}" width="${sheet.width}" height="${sheet.height}" clip-path="url(#${clip})"/></svg></g>${extras}</svg>`;
+ return `<svg viewBox="0 0 80 68" class="pet-painted pet-action-${action}" data-pet-art="${key}" aria-hidden="true"><g class="pet-painted-body"><svg x="5" y="${62-h}" width="70" height="${h}" viewBox="${box.join(' ')}" preserveAspectRatio="xMidYMax meet" overflow="hidden"><defs><clipPath id="${clip}"><polygon points="${record.outline.map(p=>p.join(',')).join(' ')}"/></clipPath></defs><image ${paintedArtAttrs(record)} clip-path="url(#${clip})"/></svg></g>${extras}</svg>`;
 }
